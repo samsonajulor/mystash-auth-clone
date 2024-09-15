@@ -1,0 +1,6 @@
+[submodule "modules"]
+	path = modules
+	url = https://github.com/mystash-ng/mystash-database.git
+[submodule "requests"]
+	path = requests
+	url = https://github.com/mystash-ng/mystash-requests.git

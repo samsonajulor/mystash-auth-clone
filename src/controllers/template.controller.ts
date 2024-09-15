@@ -1,0 +1,70 @@
+import { Request, Response } from 'express';
+import { AuthDocument, AuthModel } from '@modules/src/mongodb';
+import { LogAction, LogStatus, LogUsers, EmailDto, StatusCode, KYC } from '@modules/src/@types';
+import { Utils } from '@/utils';
+import { Model } from '@modules/src/services';
+import APP from '../server';
+import { BaseController } from './base.controller';
+
+/**
+ * @description please use as template for creating other controllers
+ */
+class TemplateController extends BaseController<AuthDocument> {
+  private static staticsInResponse: [LogUsers, LogAction, Model<AuthDocument>] = [LogUsers.AUTH, LogAction.CHANGE_PASSWORD, AuthModel];
+
+  /**
+   * Handles the Template process.
+   * @param req - Express request object containing the user sign-up data.
+   * @param res - Express response object to send the response.
+   */
+  async template(req: Request, res: Response) {
+    const session = await APP.connection.startSession();
+    session.startTransaction();
+
+    try {
+      /************ Extract validated sign-up data ************/
+      const validatedTemplateRequestBody: EmailDto & Partial<AuthDocument> = res.locals.validatedTemplateRequestBody;
+
+      const {} = validatedTemplateRequestBody as EmailDto;
+
+      /************ Commit the transaction and send a successful response ************/
+      await session.commitTransaction();
+      session.endSession();
+      return Utils.apiResponse<AuthDocument>(
+        res,
+        StatusCode.CREATED,
+        {},
+        {
+          user: LogUsers.AUTH,
+          action: LogAction.SIGNUP,
+          message: 'Signup success.',
+          status: LogStatus.SUCCESS,
+          serviceLog: AuthModel,
+          options: { email: '', phone: '', authId: '', profileId: '' },
+        },
+      );
+    } catch (error) {
+      console.log(error);
+      !session.transaction.isActive && (await session.abortTransaction());
+      session.endSession();
+      /************ Send an error response ************/
+      return Utils.apiResponse<AuthDocument>(
+        res,
+        StatusCode.UNAUTHORIZED,
+        { devError: error.message || 'server error' },
+        {
+          user: LogUsers.AUTH,
+          action: LogAction.SIGNUP,
+          message: JSON.stringify(error),
+          status: LogStatus.FAIL,
+          serviceLog: AuthModel,
+          options: { email: '', phone: '', authId: '', profileId: '' },
+        },
+      );
+    } finally {
+      session.endSession();
+    }
+  }
+}
+
+export default new TemplateController();
