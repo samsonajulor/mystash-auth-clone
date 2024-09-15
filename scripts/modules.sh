@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-submodule_url="https://github.com/mystash-ng/mystash-database.git"
+submodule_url="https://github.com/mystash-ng/mystash-db-clone.git"
 
 echo $submodule_url
 
